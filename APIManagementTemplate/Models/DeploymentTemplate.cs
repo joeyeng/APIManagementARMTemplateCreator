@@ -482,7 +482,7 @@ namespace APIManagementTemplate.Models
 
             if (APIMInstanceAdded)
             {
-                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");                
+                dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
             }
 
             resource["dependsOn"] = dependsOn;
@@ -500,6 +500,13 @@ namespace APIManagementTemplate.Models
             string name = restObject.Value<string>("name");
             string type = restObject.Value<string>("type");
 
+            Func<JObject, bool> findVersionSet = vs =>
+                vs.Value<string>("type") == "Microsoft.ApiManagement/service/api-version-sets" 
+                && vs.Value<string>("name").Contains(name);
+
+            bool versionSetExists = this.resources.Any(findVersionSet);
+            if (versionSetExists)
+                return null;
 
             AzureResourceId apiid = new AzureResourceId(restObject.Value<string>("id"));
             string servicename = apiid.ValueAfter("service");
@@ -518,9 +525,10 @@ namespace APIManagementTemplate.Models
             if (APIMInstanceAdded)
             {
                 dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service', parameters('{GetServiceName(servicename)}'))]");
-
             }
+
             resource["dependsOn"] = dependsOn;
+
             this.resources.Add(resource);
             return obj;
         }
