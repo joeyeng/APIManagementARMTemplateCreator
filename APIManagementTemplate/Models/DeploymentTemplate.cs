@@ -621,7 +621,7 @@ namespace APIManagementTemplate.Models
             resource["properties"] = restObject["properties"];
 
             var dependsOn = new JArray();
-            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/products', parameters('{GetServiceName(servicename)}'), {productname})]");
+            //dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/products', parameters('{GetServiceName(servicename)}'), {productname})]");
             resource["dependsOn"] = dependsOn;
 
             return resource;
