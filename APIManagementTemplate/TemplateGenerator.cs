@@ -107,11 +107,14 @@ namespace APIManagementTemplate
                     string apiNameParamName = template.AddParameter($"api_{apiObject.Value<string>("name")}_name", "string", "");
                     var logger = template.AddLogger(servicename);
 
-                    string loggerResourceId = logger.GetResourceId(
-                        template.WrapParameterNameWithoutBrackets(template.GetServiceName(servicename)),
-                        template.WrapParameterNameWithoutBrackets(apiNameParamName));
+                    if (logger != null)
+                    {
+                        string loggerResourceId = logger.GetResourceId(
+                            template.WrapParameterNameWithoutBrackets(template.GetServiceName(servicename)),
+                            template.WrapParameterNameWithoutBrackets(apiNameParamName));
 
-                    apiTemplateResource.Value<JArray>("dependsOn").Add(loggerResourceId);
+                        apiTemplateResource.Value<JArray>("dependsOn").Add(loggerResourceId);
+                    }
 
                     var diagnostics = template.CreateDiagnostics(servicename, apiNameParamName);
                     apiTemplateResource.Value<JArray>("resources").Add(diagnostics);
