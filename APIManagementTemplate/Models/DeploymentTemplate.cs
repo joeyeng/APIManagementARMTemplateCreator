@@ -836,7 +836,6 @@ namespace APIManagementTemplate.Models
             var loggerTemplate = new ResourceTemplate
             {
                 type = "Microsoft.ApiManagement/service/loggers",
-                name = $"[concat({serviceNameParam}, '/', {loggerNameParam})]",
                 properties = JObject.FromObject(new
                 {
                     loggerType = "applicationInsights",
@@ -844,6 +843,12 @@ namespace APIManagementTemplate.Models
                     isBuffered = true
                 })
             };
+
+            loggerTemplate.AddName(serviceNameParam);
+            loggerTemplate.AddName(loggerNameParam);
+
+            if (resources.Any(r => r.Value<string>("name") == loggerTemplate.name))
+                return null;
 
             resources.Add(JObject.FromObject(loggerTemplate));
 
