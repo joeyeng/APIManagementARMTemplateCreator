@@ -115,7 +115,7 @@ namespace APIManagementTemplate
 
                     var diagnostics = template.CreateDiagnostics(servicename, apiNameParamName);
                     apiTemplateResource.Value<JArray>("resources").Add(diagnostics);
-                    
+
                     string openidProviderId = GetOpenIdProviderId(apiTemplateResource);
                     if (!String.IsNullOrWhiteSpace(openidProviderId))
                     {
@@ -228,49 +228,27 @@ namespace APIManagementTemplate
                 }
             }
 
-            if (exportProducts)
+            var products = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/products");
+            foreach (JObject productObject in (products == null ? new JArray() : products.Value<JArray>("value")))
             {
-                var products = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/products");
-                foreach (JObject productObject in (products == null ? new JArray() : products.Value<JArray>("value")))
+                var id = productObject.Value<string>("id");
+                var productInstance = await resourceCollector.GetResource(id);
+
+                var productApis = await resourceCollector.GetResource(id + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
+
+                // Skip product if not related to an API in the filter.
+                if (productApis != null && productApis.Value<JArray>("value").Count > 0)
                 {
-                    var id = productObject.Value<string>("id");
-                    var productInstance = await resourceCollector.GetResource(id);
-
-                    var productApis = await resourceCollector.GetResource(id + "/apis", (string.IsNullOrEmpty(apiFilters) ? "" : $"$filter={apiFilters}"));
-
-                    // Skip product if not related to an API in the filter.
-                    if (productApis != null && productApis.Value<JArray>("value").Count > 0)
+                    foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
                     {
-                        var productTemplateResource = template.AddProduct(productObject);
-
-                        foreach (JObject productApi in (productApis == null ? new JArray() : productApis.Value<JArray>("value")))
+                        var productProperties = productApi["properties"];
+                        if (productProperties["apiVersionSetId"] != null)
                         {
-                            var productProperties = productApi["properties"];
-                            if (productProperties["apiVersionSetId"] != null)
-                            {
-                                var apiVersionSetId = new AzureResourceId(productProperties["apiVersionSetId"].ToString()).ValueAfter("api-version-sets");
-                                productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('{GetServiceName(servicename)}'), '{apiVersionSetId}')]";
-                            }
-                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(productApi));
+                            var apiVersionSetId = new AzureResourceId(productProperties["apiVersionSetId"].ToString()).ValueAfter("api-version-sets");
+                            productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('{GetServiceName(servicename)}'), '{apiVersionSetId}')]";
                         }
 
-                        var groups = await resourceCollector.GetResource(id + "/groups");
-                        foreach (JObject group in (groups == null ? new JArray() : groups.Value<JArray>("value")))
-                        {
-                            if (group["properties"].Value<bool>("builtIn") == false)
-                            {
-                                // Add group resource
-                                var groupObject = await resourceCollector.GetResource(GetAPIMResourceIDString() + "/groups/" + group.Value<string>("name"));
-                                template.AddGroup(groupObject);
-                                productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(group));
-                                productTemplateResource.Value<JArray>("dependsOn").Add($"[resourceId('Microsoft.ApiManagement/service/groups', parameters('{GetServiceName(servicename)}'), '{group.Value<string>("name")}')]");
-                            }
-                        }
-                        var policies = await resourceCollector.GetResource(id + "/policies");
-                        foreach (JObject policy in (policies == null ? new JArray() : policies.Value<JArray>("value")))
-                        {
-                            productTemplateResource.Value<JArray>("resources").Add(template.AddProductSubObject(policy));
-                        }
+                        template.resources.Add(template.AddProductSubObject(productApi));
                     }
                 }
             }
