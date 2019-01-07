@@ -20,9 +20,9 @@ namespace APIManagementTemplate.Models
             return String.Join(",", names);
         }
 
-        public string GetResourceId(string serviceNameParamName, string apiNameParamName)
+        public string GetResourceId(string serviceNameParamName, params string[] resources)
         {
-            return $"[resourceId('{type}', {serviceNameParamName}, {apiNameParamName})]";
+            return $"[resourceId('{type}', {serviceNameParamName}{string.Join(", ", resources)})]";
         }
 
         public string comments { get; set; }
@@ -47,7 +47,7 @@ namespace APIManagementTemplate.Models
         {
             get
             {
-                if (type.EndsWith("policies"))
+                if (type.EndsWith("policies") || type == "diagnostics")
                     return "2018-06-01-preview";
 
                 return "2017-03-01";
