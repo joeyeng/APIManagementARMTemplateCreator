@@ -104,7 +104,8 @@ namespace APIManagementTemplate
                         }
                     }
 
-                    string apiNameParamName = template.AddParameter($"api_{apiObject.Value<string>("name")}_name", "string", "");
+                    string name = apiObject.Value<string>("name");
+                    string apiNameParamName = template.AddParameter($"api_{name}_name", "string", name);
                     string loggerNameParam = template.WrapParameterNameWithoutBrackets(template.AddParameter("api-logger-name", "string", ""));
                     var logger = template.AddLogger(servicename, loggerNameParam);
 
