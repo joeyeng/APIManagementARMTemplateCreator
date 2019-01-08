@@ -404,7 +404,7 @@ namespace APIManagementTemplate.Models
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
-            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' ,'{AddParameter($"{name}_sitename", "string", "")}')]";
+            obj.name = $"[concat(parameters('{AddParameter($"{GetServiceName(servicename)}", "string", servicename)}'), '/' , parameters('{AddParameter($"{name}_siteName", "string", "")}'))]";
             obj.type = type;
             var resource = JObject.FromObject(obj);
             resource["properties"] = restObject["properties"];
@@ -597,7 +597,7 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public JObject AddProductSubObject(JObject restObject)
+        public JObject AddProductApi(JObject restObject)
         {
             if (restObject == null)
                 return null;
@@ -611,7 +611,8 @@ namespace APIManagementTemplate.Models
 
             productname = parametrizePropertiesOnly ? $"'{productname}'" : $"parameters('{AddParameter($"product_{productname}_name", "string", productname)}')";
             bool nonApi = type != "Microsoft.ApiManagement/service/products/apis";
-            var objectname = parametrizePropertiesOnly || nonApi ? $"'{name}'" : $"parameters('{AddParameter($"api_{name}_name", "string", name)}')";
+            string apiParamName = AddParameter($"api_{name}_name", "string", name);
+            var objectname = parametrizePropertiesOnly || nonApi ? $"'{name}'" : $"parameters('{apiParamName}')";
 
             var obj = new ResourceTemplate();
             obj.comments = "Generated for resource " + restObject.Value<string>("id");
@@ -621,7 +622,7 @@ namespace APIManagementTemplate.Models
             resource["properties"] = restObject["properties"];
 
             var dependsOn = new JArray();
-            //dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/products', parameters('{GetServiceName(servicename)}'), {productname})]");
+            dependsOn.Add($"[resourceId('Microsoft.ApiManagement/service/apis/', parameters('{GetServiceName(servicename)}'), parameters('{apiParamName}'))]");
             resource["dependsOn"] = dependsOn;
 
             return resource;
@@ -826,10 +827,9 @@ namespace APIManagementTemplate.Models
             return resource;
         }
 
-        public ResourceTemplate AddLogger(string servicename)
+        public ResourceTemplate AddLogger(string servicename, string loggerNameParam)
         {
             string serviceNameParam = WrapParameterNameWithoutBrackets(GetServiceName(servicename));
-            string loggerNameParam = WrapParameterNameWithoutBrackets(AddParameter("api-logger-name", "string", ""));
             string appInsightsRgNameParam = WrapParameterNameWithoutBrackets(AddParameter("app-insights-resourceGroup", "string", ""));
             string appInsightsNameParam = WrapParameterNameWithoutBrackets(AddParameter("app-insights-name", "string", ""));
 
@@ -863,7 +863,7 @@ namespace APIManagementTemplate.Models
             var diagnosticsTemplate = new ResourceTemplate
             {
                 type = "diagnostics",
-                name = "applicationInsights",
+                name = "applicationinsights",
                 properties = JObject.FromObject(new
                 {
                     enabled = true,

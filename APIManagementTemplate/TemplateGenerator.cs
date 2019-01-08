@@ -105,13 +105,14 @@ namespace APIManagementTemplate
                     }
 
                     string apiNameParamName = template.AddParameter($"api_{apiObject.Value<string>("name")}_name", "string", "");
-                    var logger = template.AddLogger(servicename);
+                    string loggerNameParam = template.WrapParameterNameWithoutBrackets(template.AddParameter("api-logger-name", "string", ""));
+                    var logger = template.AddLogger(servicename, loggerNameParam);
 
                     if (logger != null)
                     {
                         string loggerResourceId = logger.GetResourceId(
                             template.WrapParameterNameWithoutBrackets(template.GetServiceName(servicename)),
-                            template.WrapParameterNameWithoutBrackets(apiNameParamName));
+                            loggerNameParam);
 
                         apiTemplateResource.Value<JArray>("dependsOn").Add(loggerResourceId);
                     }
@@ -251,7 +252,7 @@ namespace APIManagementTemplate
                             productProperties["apiVersionSetId"] = $"[resourceId('Microsoft.ApiManagement/service/api-version-sets', parameters('{GetServiceName(servicename)}'), '{apiVersionSetId}')]";
                         }
 
-                        template.resources.Add(template.AddProductSubObject(productApi));
+                        template.resources.Add(template.AddProductApi(productApi));
                     }
                 }
             }
