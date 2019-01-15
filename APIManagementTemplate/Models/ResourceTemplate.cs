@@ -22,7 +22,7 @@ namespace APIManagementTemplate.Models
 
         public string GetResourceId(string serviceNameParamName, params string[] resources)
         {
-            return $"[resourceId('{type}', {serviceNameParamName}{string.Join(", ", resources)})]";
+            return $"[resourceId('{type}', {serviceNameParamName}, {string.Join(", ", resources)})]";
         }
 
         public string comments { get; set; }
