@@ -37,9 +37,11 @@ namespace APIManagementTemplate
         }
         private static HttpClient client = new HttpClient() { BaseAddress = new Uri("https://management.azure.com") };
 
-        public async Task<JObject> GetResource(string resourceId, string suffix = "",string apiversion = "2017-03-01")
+        public async Task<JObject> GetResource(string resourceId, string suffix = "",string apiversion = "2018-06-01-preview")
         {
             string url = resourceId + $"?api-version={apiversion}" + (string.IsNullOrEmpty(suffix) ? "" : $"&{suffix}");
+            Console.WriteLine();
+            Console.WriteLine("Get resource: " + url);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var response = await client.GetAsync(url);
 
