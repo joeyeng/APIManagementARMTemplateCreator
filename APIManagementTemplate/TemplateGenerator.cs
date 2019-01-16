@@ -140,11 +140,12 @@ namespace APIManagementTemplate
 
         private async Task<JObject> AddPolicy(JObject policy, DeploymentTemplate template, JObject apiInstance, JObject apiTemplateResource, string startName)
         {
-            //if (!this.PolicyHandeAzureResources(policy, apiTemplateResource.Value<string>("name"), template))
-            PolicyHandeBackendUrl(policy, apiInstance.Value<string>("name"), template);
-            var policyTemplateResource = template.CreatePolicy(policy);
-            this.PolicyHandleProperties(policy, apiTemplateResource.Value<string>("name"), null);
-            
+            var pol = template.CreatePolicy(policy);
+            this.PolicyHandleProperties(pol, apiTemplateResource.Value<string>("name"), null);
+
+            if (!this.PolicyHandeAzureResources(pol, apiTemplateResource.Value<string>("name"), template))
+                PolicyHandeBackendUrl(pol, apiInstance.Value<string>("name"), template);
+
             var backendid = TemplateHelper.GetBackendIdFromnPolicy(policy["properties"].Value<string>("policyContent"));
 
             if (!string.IsNullOrEmpty(backendid))
@@ -166,7 +167,7 @@ namespace APIManagementTemplate
                 }
             }
 
-            return policyTemplateResource;
+            return pol;
         }
 
         private async Task AddSchemas(string apiId, DeploymentTemplate template, JObject apiTemplateResource)
